@@ -1,0 +1,3 @@
+
+## Printing Calendar
+In Python, printing a calendar can be easily achieved using the built-in calendar module, which provides functions to work with dates and calendars. The module allows you to display a monthly or yearly calendar in a text format. For example, the calendar.month() function prints the calendar for a specific month, while calendar.calendar() displays the calendar for an entire year. The output is neatly formatted to show the days of the week and the corresponding dates. The module also offers customization options, such as setting the first day of the week to Monday or Sunday. This makes the calendar module a convenient tool for date-related programming tasks, such as scheduling or date visualization. 
