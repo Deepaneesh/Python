@@ -1,16 +1,16 @@
-# Data cleaning functions -------------------------------------------------------------------
-
-# libraries ----------------------------------------------------------------------------------
-
+# overall reuired libraries
 import os
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 import shutil
 
+#===============================================================================
+# 1. Create project folders
+# ==============================================================================
 
-# 1.Function to create project folders -------------------------------------------------------------------
-
+# Required libraries:
+import os
 
 def create_project_folders(
     dirs=("input", "output", "scripts", "temp")
@@ -20,52 +20,76 @@ def create_project_folders(
         
         if not os.path.exists(d):
             print(f"Creating directory: {d}")
-            os.makedirs(d, exist_ok=True)
+        
+        os.makedirs(d, exist_ok=True)
+# --------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------------------------------
+# ================================================================================
+# 2. View a DataFrame in Excel or CSV format
+# ==============================================================================
 
-# 2.Function to view a DataFrame in Excel or CSV format ------------------------------------------
+# Required libraries:
+import os
+import pandas as pd
+from datetime import datetime
 
 def excel_view(df, format="csv"):
     
-    # Convert to DataFrame
     df = pd.DataFrame(df)
 
-    # Validate format
     if format not in ["csv", "xlsx"]:
-        raise ValueError("format must be either 'csv' or 'xlsx'")
+        raise ValueError(
+            "format must be either 'csv' or 'xlsx'"
+        )
 
-    # Create temp directory
-    dir_path = os.path.join(os.getcwd(), "temp")
-    os.makedirs(dir_path, exist_ok=True)
+    dir_path = os.path.join(
+        os.getcwd(),
+        "temp"
+    )
 
-    # Create timestamp
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    os.makedirs(
+        dir_path,
+        exist_ok=True
+    )
 
-    # Create file path
+    timestamp = datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+
     file = os.path.join(
         dir_path,
         f"{timestamp}_temp.{format}"
     )
 
-    # Write file
     if format == "csv":
         df.to_csv(file, index=False)
 
     elif format == "xlsx":
         df.to_excel(file, index=False)
 
-    # Open the file
-    os.startfile(os.path.abspath(file))
+    os.startfile(
+        os.path.abspath(file)
+    )
+#------------------------------------------------------------------------------
 
+#==============================================================================
+# 3. Delete folders
+# ==============================================================================
 
-# ------------------------------------------------------------------------------------------------------
+# Required libraries:
+from pathlib import Path
+import shutil
 
-# 3. deleting the folders ------------------------------------------------------------------------------
+def delete_folder(
+    path="temp",
+    force=True
+):
 
-def delete_folder(path="temp", force=True):
-
-    paths = [path] if isinstance(path, str) else path
+    paths = (
+        [path]
+        if isinstance(path, str)
+        else path
+    )
 
     results = []
 
@@ -79,8 +103,10 @@ def delete_folder(path="temp", force=True):
             continue
 
         try:
+
             if folder.is_dir():
                 shutil.rmtree(folder)
+
             elif force:
                 folder.unlink()
 
@@ -91,37 +117,50 @@ def delete_folder(path="temp", force=True):
             results.append(False)
 
     return results
+# --------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------------------------------------------
+# ==============================================================================
+# 4. Trim spaces from all columns
+# ==============================================================================
 
-# 4. Function to trim spaces from all columns in a DataFrame ---------------------------------------------------
+# Required libraries:
+import pandas as pd
 
 def trimmed_data(data):
 
-    if not isinstance(data, pd.DataFrame):
-        raise TypeError("`data` must be a pandas DataFrame.")
+    if not isinstance(
+        data,
+        pd.DataFrame
+    ):
+        raise TypeError(
+            "`data` must be a pandas DataFrame."
+        )
 
-    # Store original column types
-    numeric_var = data.select_dtypes(include="number").columns
-    categorical_var = data.select_dtypes(include="category").columns
+    numeric_var = data.select_dtypes(
+        include="number"
+    ).columns
 
-    # Convert all columns to string and trim spaces
+    categorical_var = data.select_dtypes(
+        include="category"
+    ).columns
+
     trim_data = data.astype(str).apply(
         lambda col: col.str.strip()
     )
 
-    # Convert numeric columns back to numeric
     for col in numeric_var:
+
         trim_data[col] = pd.to_numeric(
             trim_data[col],
             errors="coerce"
         )
 
-    # Convert categorical columns back to category
     for col in categorical_var:
-        trim_data[col] = trim_data[col].astype("category")
+
+        trim_data[col] = (
+            trim_data[col]
+            .astype("category")
+        )
 
     return trim_data
-
-# --------------------------------------------------------------------------------------
-
+# ------------------------------------------------------------------------------------------
