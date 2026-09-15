@@ -164,3 +164,172 @@ def trimmed_data(data):
 
     return trim_data
 # ------------------------------------------------------------------------------------------
+
+# ==============================================================================
+# 5. Get the latest data file based on date in filename
+# ==============================================================================
+
+from pathlib import Path
+import pandas as pd
+import re
+
+
+def get_latest_data(path, name=None, ext=None):
+
+    path = Path(path)
+
+    # Get files
+    files = [
+        file for file in path.iterdir()
+        if file.is_file()
+    ]
+
+    if len(files) == 0:
+        raise ValueError(
+            "No files found in the specified path."
+        )
+
+    # If only one file exists
+    if len(files) == 1:
+
+        latest_file = files[0]
+
+    else:
+
+        file_names = [file.name for file in files]
+
+        # Split filename
+        split_data = [
+            file_name.split(" - ", 1)
+            for file_name in file_names
+        ]
+
+        # Dates
+        dates = [
+            x[0] if len(x) > 0 else None
+            for x in split_data
+        ]
+
+        # Dataset names
+        dataset_names = [
+            x[1] if len(x) > 1 else ""
+            for x in split_data
+        ]
+
+        # Remove extensions
+        dataset_names_clean = [
+            re.sub(r"\..*$", "", x)
+            for x in dataset_names
+        ]
+
+        # Convert dates
+        dates = pd.to_datetime(
+            dates,
+            format="%d-%m-%Y",
+            errors="coerce"
+        )
+
+        # Filter by name
+        if name is not None:
+
+            idx = [
+                bool(
+                    re.search(
+                        name,
+                        dataset_name,
+                        re.IGNORECASE
+                    )
+                )
+                for dataset_name in dataset_names_clean
+            ]
+
+            files = [
+                file
+                for file, keep in zip(files, idx)
+                if keep
+            ]
+
+            dates = dates[idx]
+
+        # Filter by extension
+        if ext is not None:
+
+            ext = ext.lstrip(".")
+
+            idx = [
+                file.suffix.lower() == f".{ext.lower()}"
+                for file in files
+            ]
+
+            files = [
+                file
+                for file, keep in zip(files, idx)
+                if keep
+            ]
+
+            dates = dates[idx]
+
+        # No files after filtering
+        if len(files) == 0:
+            raise ValueError(
+                "No files found matching criteria"
+            )
+
+        # Latest date
+        max_date = dates.max()
+
+        latest_files = [
+            file
+            for file, date in zip(files, dates)
+            if date == max_date
+        ]
+
+        # Multiple latest files
+        if len(latest_files) > 1:
+
+            print(
+                "Multiple files found with the latest date:"
+            )
+
+            print(
+                "\n".join(str(file) for file in latest_files)
+            )
+
+            raise ValueError(
+                "Please specify 'name' or 'ext' to narrow down."
+            )
+
+        latest_file = latest_files[0]
+
+    print(f"Loading: {latest_file}")
+
+    return str(latest_file)
+
+# ==============================================================================
+
+# =============================================================================
+#  6. Save file with today's date in filename
+# ==============================================================================
+
+from pathlib import Path
+from datetime import date
+
+
+def save_with_date(path, filename):
+
+    # Create directory if it doesn't exist
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+
+    # Today's date
+    today = date.today().strftime("%d-%m-%Y")
+
+    # Create new filename
+    new_name = f"{today} - {filename}"
+
+    print(f"Saving file as: {new_name}")
+
+    # Return complete file path
+    return str(path / new_name)
+
+# =============================================================================

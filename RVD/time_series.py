@@ -527,3 +527,131 @@ def apply_growth_rate_tail(
 
 # ---------------------------------------------------------------------------------------------------------------
 
+# ==============================================================================================
+# 6. Time series Accuracy Metrics
+# ==============================================================================================
+
+import numpy as np
+import pandas as pd
+
+
+def time_accuracy(actual, predicted, digits=4):
+
+    # Convert to numeric arrays
+    actual = np.asarray(actual, dtype=float)
+    predicted = np.asarray(predicted, dtype=float)
+
+    # Check same length
+    if len(actual) != len(predicted):
+        raise ValueError(
+            "'actual' and 'predicted' must have the same length."
+        )
+
+    # Check missing values
+    if np.isnan(actual).any() or np.isnan(predicted).any():
+        raise ValueError(
+            "Missing values are not allowed."
+        )
+
+    # Check finite values
+    if not np.isfinite(actual).all() or not np.isfinite(predicted).all():
+        raise ValueError(
+            "Inputs must contain only finite numeric values."
+        )
+
+    # Errors
+    errors = actual - predicted
+
+    # Mean Error
+    me = np.mean(errors)
+
+    # Mean Squared Error
+    mse = np.mean(errors ** 2)
+
+    # Root Mean Squared Error
+    rmse = np.sqrt(mse)
+
+    # Mean Absolute Error
+    mae = np.mean(np.abs(errors))
+
+    # Mean Percentage Error
+    if np.any(actual == 0):
+        mpe = np.nan
+    else:
+        mpe = np.mean(errors / actual) * 100
+
+    # Mean Absolute Percentage Error
+    if np.any(actual == 0):
+        mape = np.nan
+    else:
+        mape = np.mean(np.abs(errors / actual)) * 100
+
+    # Symmetric Mean Absolute Percentage Error
+    denominator = np.abs(actual) + np.abs(predicted)
+
+    smape_values = (
+        2 * np.abs(errors) / denominator
+    )
+
+    # Equivalent to na.rm = TRUE
+    smape = np.nanmean(smape_values) * 100
+
+    # Mean Absolute Scaled Error
+    if len(actual) < 2:
+        mase = np.nan
+    else:
+        scale = np.mean(np.abs(np.diff(actual)))
+
+        if scale == 0:
+            mase = np.nan
+        else:
+            mase = mae / scale
+
+    # R-squared
+    ss_res = np.sum(errors ** 2)
+    ss_tot = np.sum(
+        (actual - np.mean(actual)) ** 2
+    )
+
+    if ss_tot == 0:
+        r_squared = np.nan
+    else:
+        r_squared = 1 - (ss_res / ss_tot)
+
+    # Correlation
+    correlation = np.corrcoef(actual, predicted)[0, 1]
+
+    # Output
+    out = pd.DataFrame({
+        "Metric": [
+            "R-squared",
+            "Correlation",
+            "RMSE",
+            "MSE",
+            "MAE",
+            "ME",
+            "MPE",
+            "MAPE",
+            "SMAPE",
+            "MASE"
+        ],
+        "Value": np.round(
+            [
+                r_squared,
+                correlation,
+                rmse,
+                mse,
+                mae,
+                me,
+                mpe,
+                mape,
+                smape,
+                mase
+            ],
+            digits
+        )
+    })
+
+    return out
+
+# -------------------------------------------------------------------------------------------------------------
