@@ -6,6 +6,10 @@
 
 %reset -sf
 
+# List the variables in the environment
+
+%whos 
+
 # =========================================================
 
 # Loading Libraries ======================================
